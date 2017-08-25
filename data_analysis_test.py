@@ -1,5 +1,6 @@
-#coding=utf-8
-import urllib.request
+# coding=utf-8
+
+import urllib2
 import json
 import threading
 import time
@@ -16,11 +17,18 @@ class BitcoinEntity():
     _sell = 0   #: 卖一价
     _vol = 0    #: 成交量(最近的24小时)
 
-class Ultility():
+
+class Ultility:
+
+
     waitTime = 10
     USD_RMB = 0
 
-    def GetUSDExchange(slef):
+    def __int__(self):
+        pass
+
+    @classmethod
+    def getUSDexchange(cls):
         #global USD_RMB
         url = "http://www.boc.cn/sourcedb/whpj/"
         html = requests.get(url).content.decode('utf-8')
@@ -33,18 +41,22 @@ class Ultility():
 
         USD_RMB = float(result[192])/100
         print('USD-RMB : %s' %USD_RMB)
+        return USD_RMB
 
-    def GetData(slef,t_url):
-        #print(t_url)
-        response = urllib.request.urlopen(t_url, timeout=5)  # 打开连接，timeout为请求超时时间
-        data = response.read().decode('utf-8')  # 返回结果解码
+    @classmethod
+    def getURLData(cls, t_url):
+        print(t_url)
+
+        req = urllib2.Request(t_url)  # 打开连接，timeout为请求超时时间
+        res = urllib2.urlopen(req, None, 5)
+        data = res.read().decode('utf-8')  # 返回结果解码
         json_data = json.loads(data)
         #list_all_dict(json_data)
         return json_data
 
-    def HuobiBTCTicker(slef,target):
+    def Huobi_BTC_Ticker(self, target):
         t_url = 'http://api.huobi.com/staticmarket/ticker_btc_json.js'
-        t_data = Ultility.GetData(t_url)
+        t_data = Ultility.getURLData(t_url)
         target._date = t_data['time']
         target._buy = t_data.get('ticker')['buy']
         target._sell = t_data.get('ticker')['sell']
@@ -54,9 +66,9 @@ class Ultility():
         target._low = t_data.get('ticker')['low']
         target._vol = t_data.get('ticker')['vol']
 
-    def HuobiLTCTicker(slef, target):
+    def Huobi_LTC_Ticker(self, target):
         t_url = 'http://api.huobi.com/staticmarket/ticker_ltc_json.js'
-        t_data = Ultility.GetData(t_url)
+        t_data = Ultility.getURLData(t_url)
         target._date = t_data['time']
         target._buy = t_data.get('ticker')['buy']
         target._sell = t_data.get('ticker')['sell']
@@ -91,10 +103,10 @@ class Ultility():
         :return: 
         '''
 
-    def Okcoin_Ticker(slef,target):
+    def Okcoin_BTC_Ticker(self, target):
         t_url = 'https://www.okcoin.cN/api/v1/ticker.do?symbol=btc_cny'
         #t_url = 'https://www.okcoin.cn/api/v1/ticker.do?symbol=btc_usd'
-        t_data = Ultility.GetData(t_url)
+        t_data = Ultility.getURLData(t_url)
         target._date = t_data['date']
         target._buy = t_data.get('ticker')['buy']
         target._sell = t_data.get('ticker')['sell']
@@ -114,9 +126,9 @@ class Ultility():
         :return:
         '''
 
-    def Bitstamp_Ticker(slef,target):
+    def Bitstamp_BTC_Ticker(self, target):
         t_url = 'https://www.bitstamp.net/api/ticker/'
-        t_data = Ultility.GetData(t_url)
+        t_data = Ultility.getURLData(t_url)
         target._date = t_data['date']
         target._buy = t_data.get('buy')
         target._sell = t_data.get('sell')
@@ -166,9 +178,9 @@ class Ultility():
         '''
 
 
-    def Bitfinex_Ticker(slef,target):
+    def Bitfinex_BTC_Ticker(self,target):
         t_url = 'https://api.bitfinex.com/v1/pubticker/btcusd'
-        t_data = Ultility.GetData(t_url)
+        t_data = Ultility.getURLData(t_url)
         target._date = t_data['timestamp']
         target._buy = t_data.get('ask')
         target._sell = t_data.get('bid')
@@ -186,7 +198,7 @@ class Ultility():
         https://api.bitfinex.com/v1/pubticker/btcusd
         '''
 
-    def PrintResult(slef,t_url):
+    def PrintResult(self,t_url):
         print(t_url)
         response = urllib.request.urlopen(t_url, timeout=5)  # 打开连接，timeout为请求超时时间
         data = response.read().decode('utf-8')  # 返回结果解码
@@ -197,33 +209,39 @@ class Ultility():
 
         list_all_dict(json_data)
 
-
-    def list_all_dict(slef,dict_a):
+    @classmethod
+    def list_all_dict(cls, dict_a):
         if isinstance(dict_a,dict) : #使用isinstance检测数据类型
             for x in range(len(dict_a)):
                 temp_key = list(dict_a.keys())[x]
                 temp_value = dict_a[temp_key]
                 print("%s : %s" %(temp_key,temp_value))
-                list_all_dict(temp_value) #自我调用实现无限遍历
+                Ultility.list_all_dict(self, temp_value) #自我调用实现无限遍历
 
             print('*'*40)
 
 
-    def startMain(slef,):
-        GetUSDExchange()
-        t_Target = ['Huobi','Okcoin','Bitfinex','Bitstamp']
+def startMain():
+    _ult = Ultility()
+    usdrmbrate = _ult.getUSDexchange()
+    t_Target = ['Huobi','Okcoin','Bitfinex','Bitstamp']
 
-        for t_targetName in t_Target:
-            t_targetName2 = t_targetName + '_Ticker'
-            print(t_targetName2)
-            t = threading.Thread(target=eval(t_targetName2), args=(t_targetName,))
-            t.start()
+    for t_targetName in t_Target:
+        t_targetName1 = '_ult.' + t_targetName + '_BTC_' +  'Ticker'
+        print(t_targetName1)
+        t = threading.Thread(target=eval(t_targetName1), args=(t_targetName,))
+        t.start()
 
-        #Huobi_Ticker()
-        #Okcoin_Ticker()
-        #Bitfinex_Ticker()
-        #Bitstamp_Ticker()
+        #t_targetName1 = '_ult.' + t_targetName + '_LTC_' +  'Ticker'
+        #print(t_targetName1)
+        #t = threading.Thread(target=eval(t_targetName2), args=(t_targetName,))
+        #t.start()
 
+
+    #Huobi_Ticker()
+    #Okcoin_Ticker()
+    #Bitfinex_Ticker()
+    #Bitstamp_Ticker()
 
 
 if __name__=="__main__":
