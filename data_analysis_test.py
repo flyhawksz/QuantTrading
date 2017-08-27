@@ -1,74 +1,110 @@
-#coding=utf-8
-import urllib.request
+# coding=utf-8
+
+import urllib2
 import json
 import threading
 import time
 import requests
 import re
 
-class BitcoinEntity():
-    _date = 0   #: 返回数据时服务器时间
-    _buy = 0    #: 买一价
-    _high = 0  #: 最高价
-    _lastCNY = 0   #: 最新成交价
-    _lastUSD = 0   #: 最新成交价
-    _low = 0    #: 最低价
-    _sell = 0   #: 卖一价
-    _vol = 0    #: 成交量(最近的24小时)
 
-class Ultility():
-    waitTime = 10
-    USD_RMB = 0
+class Model:
+    def __init__(self, bitcoinName):
+        self.name = bitcoinName
+        self.date = ''  #: 返回数据时服务器时间
+        self.buy = ''  #: 买一价
+        self.high = ''  #: 最高价
+        self.lastCNY = ''  #: 最新成交价
+        self.lastUSD = ''  #: 最新成交价
+        self.low = ''  #: 最低价
+        self.sell = ''  #: 卖一价
+        self.vol = ''  #: 成交量(最近的24小时)
 
-    def GetUSDExchange(slef):
-        #global USD_RMB
-        url = "http://www.boc.cn/sourcedb/whpj/"
-        html = requests.get(url).content.decode('utf-8')
-        # print(html)
-        result = re.findall('(?<=<td>).+?(?=</td>)', html)
-        #print(result)
-        #print(type(result))
-        #for i in range(len(result)):
-        #    print("%d : %s" % (i, result[i]))
 
-        USD_RMB = float(result[192])/100
-        print('USD-RMB : %s' %USD_RMB)
+waitTime = 5
+USD_RMB = 0.68
 
-    def GetData(slef,t_url):
-        #print(t_url)
-        response = urllib.request.urlopen(t_url, timeout=5)  # 打开连接，timeout为请求超时时间
-        data = response.read().decode('utf-8')  # 返回结果解码
-        json_data = json.loads(data)
-        #list_all_dict(json_data)
-        return json_data
 
-    def HuobiBTCTicker(slef,target):
+def getUSDexchange():
+    global USD_RMB
+    url = "http://www.boc.cn/sourcedb/whpj/"
+    html = requests.get(url).content.decode('utf-8')
+    # print(html)
+    result = re.findall('(?<=<td>).+?(?=</td>)', html)
+    # print(result)
+    # print(type(result))
+    # for i in range(len(result)):
+    #    print("%d : %s" % (i, result[i]))
+
+    USD_RMB = float(result[192]) / 100
+    print('USD-RMB : %s' % USD_RMB)
+
+
+def getURLData(t_url):
+    # print(t_url)
+    req = urllib2.Request(t_url)  # 打开连接，timeout为请求超时时间
+    res = urllib2.urlopen(req, None, 5)
+    data = res.read().decode('utf-8')  # 返回结果解码
+    json_data = json.loads(data)
+    # list_all_dict(json_data)
+    return json_data
+
+
+def PrintResult(t_url):
+    print(t_url)
+    response = urllib2.request.urlopen(t_url, timeout=5)  # 打开连接，timeout为请求超时时间
+    data = response.read().decode('utf-8')  # 返回结果解码
+    json_data = json.loads(data)
+    print(data, type(data))
+    print('-' * 30)
+    print(json_data, type(json_data))
+
+    list_all_dict(json_data)
+
+def list_all_dict(dict_a):
+    if isinstance(dict_a, dict):  # 使用isinstance检测数据类型
+        for x in range(len(dict_a)):
+            temp_key = list(dict_a.keys())[x]
+            temp_value = dict_a[temp_key]
+            print("%s : %s" % (temp_key, temp_value))
+            list_all_dict(temp_value)  # 自我调用实现无限遍历
+
+        print('*' * 40)
+
+
+def GetHuobiBTCTicker(target):
+    global waitTime
+    while 1:
         t_url = 'http://api.huobi.com/staticmarket/ticker_btc_json.js'
-        t_data = Ultility.GetData(t_url)
-        target._date = t_data['time']
-        target._buy = t_data.get('ticker')['buy']
-        target._sell = t_data.get('ticker')['sell']
-        target._lastCNY = t_data.get('ticker')['last']
-        target._lastUSD = target._lastCNY/Ultility.USD_RMB
-        target._high = t_data.get('ticker')['high']
-        target._low = t_data.get('ticker')['low']
-        target._vol = t_data.get('ticker')['vol']
+        t_data = getURLData(t_url)
+        target.date = t_data['time']
+        target.buy = t_data.get('ticker')['buy']
+        target.sell = t_data.get('ticker')['sell']
+        target.lastCNY = t_data.get('ticker')['last']
+        target.lastUSD = target.lastCNY / USD_RMB
+        target.high = t_data.get('ticker')['high']
+        target.low = t_data.get('ticker')['low']
+        target.vol = t_data.get('ticker')['vol']
+        time.sleep(waitTime)
 
-    def HuobiLTCTicker(slef, target):
+
+def GetHuobiLTCTicker(target):
+    global waitTime
+    while 1:
         t_url = 'http://api.huobi.com/staticmarket/ticker_ltc_json.js'
-        t_data = Ultility.GetData(t_url)
-        target._date = t_data['time']
-        target._buy = t_data.get('ticker')['buy']
-        target._sell = t_data.get('ticker')['sell']
-        target._lastCNY = t_data.get('ticker')['last']
-        target._lastUSD = target._lastCNY/Ultility.USD_RMB
-        target._high = t_data.get('ticker')['high']
-        target._low = t_data.get('ticker')['low']
-        target._vol = t_data.get('ticker')['vol']
+        t_data = getURLData(t_url)
+        target.date = t_data['time']
+        target.buy = t_data.get('ticker')['buy']
+        target.sell = t_data.get('ticker')['sell']
+        target.lastCNY = t_data.get('ticker')['last']
+        target.lastUSD = target.lastCNY / USD_RMB
+        target.high = t_data.get('ticker')['high']
+        target.low = t_data.get('ticker')['low']
+        target.vol = t_data.get('ticker')['vol']
 
-
-        #print("%s CNY: %s USD %s" %(targeName,t_last,t_last*100/Ultility.USD_RMB))
-        #time.sleep(Ultility.waitTime)
+        # print("%s CNY: %s USD %s" %(targeName,t_last,t_last*100/self.USD_RMB))
+        # time.sleep(self.waitTime)
+        time.sleep(waitTime)
 
         '''
         ##实时行情数据接口 目前支持人民币现货、美元现货 ###数据文件： 
@@ -91,141 +127,156 @@ class Ultility():
         :return: 
         '''
 
-    def Okcoin_Ticker(slef,target):
+def GetOkcoinBTCTicker(target):
+    global waitTime
+    while 1:
         t_url = 'https://www.okcoin.cN/api/v1/ticker.do?symbol=btc_cny'
-        #t_url = 'https://www.okcoin.cn/api/v1/ticker.do?symbol=btc_usd'
-        t_data = Ultility.GetData(t_url)
-        target._date = t_data['date']
-        target._buy = t_data.get('ticker')['buy']
-        target._sell = t_data.get('ticker')['sell']
-        target._lastCNY = t_data.get('ticker')['last']
-        target._lastUSD = target._lastCNY/Ultility.USD_RMB
-        target._high = t_data.get('ticker')['high']
-        target._low = t_data.get('ticker')['low']
-        target._vol = t_data.get('ticker')['vol']
+        # t_url = 'https://www.okcoin.cn/api/v1/ticker.do?symbol=btc_usd'
+        t_data = getURLData(t_url)
+        target.date = t_data['date']
+        target.buy = t_data.get('ticker')['buy']
+        target.sell = t_data.get('ticker')['sell']
+        target.lastCNY = t_data.get('ticker')['last']
+        target.lastUSD = float(target.lastCNY) / USD_RMB
+        target.high = t_data.get('ticker')['high']
+        target.low = t_data.get('ticker')['low']
+        target.vol = t_data.get('ticker')['vol']
 
+        # t_last = t_data.get('ticker')['last']
+        # print("%s CNY: %s USD %s" %(targeName,t_last,float(t_last)*100/USD_RMB))
+        time.sleep(waitTime)
 
-        #t_last = t_data.get('ticker')['last']
-        #print("%s CNY: %s USD %s" %(targeName,t_last,float(t_last)*100/USD_RMB))
-        #time.sleep(waitTime)
-        '''
-        url = 'https://www.okcoin.cn/api/v1/ticker.do?symbol=btc_cny'
-    
-        :return:
-        '''
+    # '''
+    # url = 'https://www.okcoin.cn/api/v1/ticker.do?symbol=btc_cny'
+    #
+    # :return:
+    # '''
 
-    def Bitstamp_Ticker(slef,target):
+def GetBitstampBTCTicker(target):
+    global waitTime
+    while 1:
         t_url = 'https://www.bitstamp.net/api/ticker/'
-        t_data = Ultility.GetData(t_url)
-        target._date = t_data['date']
-        target._buy = t_data.get('buy')
-        target._sell = t_data.get('sell')
-        target._lastCNY = t_data.get('last')
-        target._lastUSD = target._lastCNY/Ultility.USD_RMB
-        target._high = t_data.get('high')
-        target._low = t_data.get('low')
-        target._vol = t_data.get('vol')
+        t_data = getURLData(t_url)
+        target.date = t_data['timestamp']
+        target.buy = t_data.get('bid')
+        target.sell = t_data.get('ask')
+        target.lastUSD = float(t_data.get('last'))
+        # print('target.lastUSD : %s - %s' % (target.lastUSD, type(target.lastUSD)))
+        target.lastCNY = target.lastUSD * USD_RMB
+        target.high = t_data.get('high')
+        target.low = t_data.get('low')
+        target.vol = t_data.get('volume')
 
+        # t_data = GetData(t_url)
+        # t_last = t_data['last']
+        # print("%s : %s" %(targeName,t_last))
+        time.sleep(waitTime)
+    '''
+    TICKERPassing any GET parameters, will result in your request being rejected.
+    Request
+    GET https://www.bitstamp.net/api/ticker/
+        Returns data for the BTC/USD currency pair.
+    GET https://www.bitstamp.net/api/v2/ticker/{currency_pair}/API v2
+        Supported values for currency_pair: btcusd, btceur, eurusd, xrpusd, xrpeur, xrpbtc, ltcusd, ltceur, ltcbtc
+    Response (JSON)
+    last    Last BTC price.
+    high    Last 24 hours price high.
+    low Last 24 hours price low.
+    vwap    Last 24 hours volume weighted average price.
+    volume  Last 24 hours volume.
+    bid Highest buy order.
+    ask Lowest sell order.
+    timestamp   Unix timestamp date and time.
+    open    First price of the day.HOURLY TICKERPassing any GET parameters, will result in your request being rejected.
+    Request
+    GET https://www.bitstamp.net/api/ticker_hour/
+        Returns data for the BTC/USD currency pair.
+    GET https://www.bitstamp.net/api/v2/ticker_hour/{currency_pair}/API v2
+        Supported values for currency_pair: btcusd, btceur, eurusd, xrpusd, xrpeur, xrpbtc, ltcusd, ltceur, ltcbtc
+    Response (JSON)
+    Returns a JSON dictionary like the ticker call, with the calculated values being from within an hour.ORDER BOOKPassing any GET parameters, will result in your request being rejected.
+    Request
+    GET https://www.bitstamp.net/api/order_book/
+        Returns data for the BTC/USD currency pair.
+    GET https://www.bitstamp.net/api/v2/order_book/{currency_pair}/API v2
+        Supported values for currency_pair: btcusd, btceur, eurusd, xrpusd, xrpeur, xrpbtc, ltcusd, ltceur, ltcbtc
+    Returns a JSON dictionary like the ticker call, with the calculated values being from within an hour.
+    Response (JSON)
+    Returns a JSON dictionary with "bids" and "asks". Each is a list of open orders and each order is represented as a list holding the price and the amount.
+    '''
 
-        #t_data = GetData(t_url)
-        #t_last = t_data['last']
-        #print("%s : %s" %(targeName,t_last))
-        #time.sleep(waitTime)
-        '''
-        TICKERPassing any GET parameters, will result in your request being rejected.
-        Request
-        GET https://www.bitstamp.net/api/ticker/
-            Returns data for the BTC/USD currency pair.
-        GET https://www.bitstamp.net/api/v2/ticker/{currency_pair}/API v2
-            Supported values for currency_pair: btcusd, btceur, eurusd, xrpusd, xrpeur, xrpbtc, ltcusd, ltceur, ltcbtc
-        Response (JSON)
-        last    Last BTC price.
-        high    Last 24 hours price high.
-        low Last 24 hours price low.
-        vwap    Last 24 hours volume weighted average price.
-        volume  Last 24 hours volume.
-        bid Highest buy order.
-        ask Lowest sell order.
-        timestamp   Unix timestamp date and time.
-        open    First price of the day.HOURLY TICKERPassing any GET parameters, will result in your request being rejected.
-        Request
-        GET https://www.bitstamp.net/api/ticker_hour/
-            Returns data for the BTC/USD currency pair.
-        GET https://www.bitstamp.net/api/v2/ticker_hour/{currency_pair}/API v2
-            Supported values for currency_pair: btcusd, btceur, eurusd, xrpusd, xrpeur, xrpbtc, ltcusd, ltceur, ltcbtc
-        Response (JSON)
-        Returns a JSON dictionary like the ticker call, with the calculated values being from within an hour.ORDER BOOKPassing any GET parameters, will result in your request being rejected.
-        Request
-        GET https://www.bitstamp.net/api/order_book/
-            Returns data for the BTC/USD currency pair.
-        GET https://www.bitstamp.net/api/v2/order_book/{currency_pair}/API v2
-            Supported values for currency_pair: btcusd, btceur, eurusd, xrpusd, xrpeur, xrpbtc, ltcusd, ltceur, ltcbtc
-        Returns a JSON dictionary like the ticker call, with the calculated values being from within an hour.
-        Response (JSON)
-        Returns a JSON dictionary with "bids" and "asks". Each is a list of open orders and each order is represented as a list holding the price and the amount.
-        '''
-
-
-    def Bitfinex_Ticker(slef,target):
+def GetBitfinexBTCTicker(target):
+    global waitTime
+    while 1:
         t_url = 'https://api.bitfinex.com/v1/pubticker/btcusd'
-        t_data = Ultility.GetData(t_url)
-        target._date = t_data['timestamp']
-        target._buy = t_data.get('ask')
-        target._sell = t_data.get('bid')
-        target._lastUSD = t_data.get('last_price')
-        target._lastCNY = target._lastCNY*Ultility.USD_RMB
-        target._high = t_data.get('high')
-        target._low = t_data.get('low')
-        target._vol = t_data.get('volume')
-        t_data = GetData(t_url)
+        t_data = getURLData(t_url)
+        target.date = t_data['timestamp'].split('.')[0]
+        target.buy = t_data.get('ask')
+        target.sell = t_data.get('bid')
+        target.lastUSD = float(t_data.get('last_price'))
+        # print('target.lastUSD : %s - %s' % (target.lastUSD, type(target.lastUSD)))
+        target.lastCNY = target.lastUSD * USD_RMB
+        target.high = t_data.get('high')
+        target.low = t_data.get('low')
+        target.vol = t_data.get('volume')
 
-        #t_last = t_data['last_price']
-        #print("%s : %s" %(targeName,t_last))
-        #time.sleep(waitTime)
-        '''
-        https://api.bitfinex.com/v1/pubticker/btcusd
-        '''
-
-    def PrintResult(slef,t_url):
-        print(t_url)
-        response = urllib.request.urlopen(t_url, timeout=5)  # 打开连接，timeout为请求超时时间
-        data = response.read().decode('utf-8')  # 返回结果解码
-        json_data = json.loads(data)
-        print(data, type(data))
-        print('-'*30)
-        print(json_data,type(json_data))
-
-        list_all_dict(json_data)
-
-
-    def list_all_dict(slef,dict_a):
-        if isinstance(dict_a,dict) : #使用isinstance检测数据类型
-            for x in range(len(dict_a)):
-                temp_key = list(dict_a.keys())[x]
-                temp_value = dict_a[temp_key]
-                print("%s : %s" %(temp_key,temp_value))
-                list_all_dict(temp_value) #自我调用实现无限遍历
-
-            print('*'*40)
-
-
-    def startMain(slef,):
-        GetUSDExchange()
-        t_Target = ['Huobi','Okcoin','Bitfinex','Bitstamp']
-
-        for t_targetName in t_Target:
-            t_targetName2 = t_targetName + '_Ticker'
-            print(t_targetName2)
-            t = threading.Thread(target=eval(t_targetName2), args=(t_targetName,))
-            t.start()
-
-        #Huobi_Ticker()
-        #Okcoin_Ticker()
-        #Bitfinex_Ticker()
-        #Bitstamp_Ticker()
+        # t_last = t_data['last_price']
+        # print("%s : %s" % (target.name, target.last))
+        time.sleep(waitTime)
+    '''
+    https://api.bitfinex.com/v1/pubticker/btcusd
+    '''
 
 
 
-if __name__=="__main__":
+def startMain():
+
+    getUSDexchange()
+    print(USD_RMB)
+
+    Huobi_BTC = Model('Huobi_BTC')
+    Okcoin_BTC = Model('Okcoin_BTC')
+    Bitfinex_BTC = Model('Bitfinex_BTC')
+    Bitstamp_BTC = Model('Bitstamp_BTC')
+
+    HuobiBTCTicker = threading.Thread(target=GetHuobiBTCTicker, args=(Huobi_BTC,))
+    HuobiBTCTicker.start()
+
+    OkcoinBTCTicker = threading.Thread(target=GetOkcoinBTCTicker, args=(Okcoin_BTC,))
+    OkcoinBTCTicker.start()
+
+    BitfinexBTCTicker = threading.Thread(target=GetBitfinexBTCTicker, args=(Bitfinex_BTC,))
+    BitfinexBTCTicker.start()
+
+    BitstampBTCTicker = threading.Thread(target=GetBitstampBTCTicker, args=(Bitstamp_BTC,))
+    BitstampBTCTicker.start()
+
+    time.sleep(waitTime)
+
+    while 1:
+        print('%s    :\t%s \t %s \t %s \t %s \t %s'
+              % (Huobi_BTC.name, Huobi_BTC.date, Huobi_BTC.buy, Huobi_BTC.sell,
+                 round(float(Huobi_BTC.lastCNY),2 ), round(Huobi_BTC.lastUSD, 2)))
+        print('%s   :\t%s \t %s \t %s \t %s \t %s'
+              % (Okcoin_BTC.name, Okcoin_BTC.date, Okcoin_BTC.buy, Okcoin_BTC.sell,
+                 round(float(Okcoin_BTC.lastCNY), 2), round(Okcoin_BTC.lastUSD, 2)))
+        print('%s :\t%s \t %s \t %s \t %s \t %s'
+              % (Bitfinex_BTC.name, Bitfinex_BTC.date, Bitfinex_BTC.buy, Bitfinex_BTC.sell,
+                 round(Bitfinex_BTC.lastCNY, 2), round(float(Bitfinex_BTC.lastUSD), 2)))
+        print('%s :\t%s \t %s \t %s \t %s \t %s'
+              % (Bitstamp_BTC.name, Bitstamp_BTC.date, Bitstamp_BTC.buy, Bitstamp_BTC.sell,
+                 round(Bitstamp_BTC.lastCNY, 2), round(float(Bitstamp_BTC.lastUSD), 2)))
+        print ('-'*80)
+
+        time.sleep(waitTime)
+
+    # t_targetName1 = '_ult.' + t_targetName + '_LTC_' +  'Ticker'
+    # print(t_targetName1)
+    # t = threading.Thread(target=eval(t_targetName2), args=(t_targetName,))
+    # t.start()
+
+
+
+
+if __name__ == "__main__":
     startMain()
-
