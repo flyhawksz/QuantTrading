@@ -6,6 +6,7 @@ import threading
 import time
 import requests
 import re
+import pandas as pd
 
 
 class Model:
@@ -19,6 +20,17 @@ class Model:
         self.low = ''  #: 最低价
         self.sell = ''  #: 卖一价
         self.vol = ''  #: 成交量(最近的24小时)
+
+    def Mod2Dic(self):
+        t = {self.name: {'date': self.date, 'buy': self.buy, 'sell': self.sell,
+             'high': self.high, 'low': self.low, 'lastCNY': self.lastCNY, 'lastUSD': self.lastUSD, 'vol': self.vol}}
+        return t
+
+    def Mod2Str(self):
+        t = '%s, %s, %s, %s, %s, %s, %s, %s, %s' \
+            % (self.name, self.date, self.buy, self.sell, self.high, self.low, self.lastCNY, self.lastUSD)
+        return t
+
 
 
 waitTime = 5
@@ -39,7 +51,6 @@ def getUSDexchange():
     USD_RMB = float(result[192]) / 100
     print('USD-RMB : %s' % USD_RMB)
 
-
 def getURLData(t_url):
     # print(t_url)
     req = urllib2.Request(t_url)  # 打开连接，timeout为请求超时时间
@@ -48,7 +59,6 @@ def getURLData(t_url):
     json_data = json.loads(data)
     # list_all_dict(json_data)
     return json_data
-
 
 def PrintResult(t_url):
     print(t_url)
@@ -86,7 +96,6 @@ def GetHuobiBTCTicker(target):
         target.low = t_data.get('ticker')['low']
         target.vol = t_data.get('ticker')['vol']
         time.sleep(waitTime)
-
 
 def GetHuobiLTCTicker(target):
     global waitTime
@@ -253,22 +262,42 @@ def startMain():
 
     time.sleep(waitTime)
 
+    BTCDic={}
     while 1:
-        print('%s    :\t%s \t %s \t %s \t %s \t %s'
-              % (Huobi_BTC.name, Huobi_BTC.date, Huobi_BTC.buy, Huobi_BTC.sell,
-                 round(float(Huobi_BTC.lastCNY),2 ), round(Huobi_BTC.lastUSD, 2)))
-        print('%s   :\t%s \t %s \t %s \t %s \t %s'
-              % (Okcoin_BTC.name, Okcoin_BTC.date, Okcoin_BTC.buy, Okcoin_BTC.sell,
-                 round(float(Okcoin_BTC.lastCNY), 2), round(Okcoin_BTC.lastUSD, 2)))
-        print('%s :\t%s \t %s \t %s \t %s \t %s'
-              % (Bitfinex_BTC.name, Bitfinex_BTC.date, Bitfinex_BTC.buy, Bitfinex_BTC.sell,
-                 round(Bitfinex_BTC.lastCNY, 2), round(float(Bitfinex_BTC.lastUSD), 2)))
-        print('%s :\t%s \t %s \t %s \t %s \t %s'
-              % (Bitstamp_BTC.name, Bitstamp_BTC.date, Bitstamp_BTC.buy, Bitstamp_BTC.sell,
-                 round(Bitstamp_BTC.lastCNY, 2), round(float(Bitstamp_BTC.lastUSD), 2)))
-        print ('-'*80)
+        BTCDic.update(Huobi_BTC.Mod2Dic())
+        BTCDic.update(Okcoin_BTC.Mod2Dic())
+        BTCDic.update(Bitfinex_BTC.Mod2Dic())
+        BTCDic.update(Bitstamp_BTC.Mod2Dic())
+
+        frameBTC = pd.DataFrame(BTCDic).T
+        frameBTC = frameBTC.sort_values(by=['lastUSD'])
+        serierBTC = frameBTC['lastUSD']
+        # print(serierBTC)
+        serierBTC = serierBTC/serierBTC[0]-1
+        # print (serierBTC)
+        frameBTC['Dif'] = serierBTC
+        print(frameBTC.loc[:, ['lastCNY', 'lastUSD', 'Dif']])
+        print ('-' * 80)
 
         time.sleep(waitTime)
+
+
+    # while 1:
+    #     print('%s    :\t%s \t %s \t %s \t %s \t %s'
+    #           % (Huobi_BTC.name, Huobi_BTC.date, Huobi_BTC.buy, Huobi_BTC.sell,
+    #              round(float(Huobi_BTC.lastCNY),2 ), round(Huobi_BTC.lastUSD, 2)))
+    #     print('%s   :\t%s \t %s \t %s \t %s \t %s'
+    #           % (Okcoin_BTC.name, Okcoin_BTC.date, Okcoin_BTC.buy, Okcoin_BTC.sell,
+    #              round(float(Okcoin_BTC.lastCNY), 2), round(Okcoin_BTC.lastUSD, 2)))
+    #     print('%s :\t%s \t %s \t %s \t %s \t %s'
+    #           % (Bitfinex_BTC.name, Bitfinex_BTC.date, Bitfinex_BTC.buy, Bitfinex_BTC.sell,
+    #              round(Bitfinex_BTC.lastCNY, 2), round(float(Bitfinex_BTC.lastUSD), 2)))
+    #     print('%s :\t%s \t %s \t %s \t %s \t %s'
+    #           % (Bitstamp_BTC.name, Bitstamp_BTC.date, Bitstamp_BTC.buy, Bitstamp_BTC.sell,
+    #              round(Bitstamp_BTC.lastCNY, 2), round(float(Bitstamp_BTC.lastUSD), 2)))
+    #     print ('-'*80)
+    #
+    #     time.sleep(waitTime)
 
     # t_targetName1 = '_ult.' + t_targetName + '_LTC_' +  'Ticker'
     # print(t_targetName1)
