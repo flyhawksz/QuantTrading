@@ -17,8 +17,8 @@ class ultility:
         result = re.findall('(?<=<td>).+?(?=</td>)', html)
         # print(result)
         # print(type(result))
-        # for i in range(len(result)):
-        #    print("%d : %s" % (i, result[i]))
+        for i in range(len(result)):
+           print("%d : %s" % (i, result[i]))
 
         USD_RMB = float(result[192]) / 100
         # print('USD-RMB : %s' % USD_RMB)
