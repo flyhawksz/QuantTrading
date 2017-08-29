@@ -20,12 +20,12 @@ class Model(object):
 
     def Mod2Dic(self):
         t = {self.name: {'date': self.date, 'buy': self.buy, 'sell': self.sell,
-             'high': self.high, 'low': self.low, 'lastCNY': self.lastCNY, 'lastUSD': self.lastUSD, 'vol': self.vol}}
+             'high': self.high, 'low': self.low, 'last': self.last, 'lastUSD': self.lastUSD, 'vol': self.vol}}
         return t
 
     def Mod2Str(self):
         t = '%s, %s, %s, %s, %s, %s, %s, %s, %s' \
-            % (self.name, self.date, self.buy, self.sell, self.high, self.low, self.lastCNY, self.lastUSD)
+            % (self.name, self.date, self.buy, self.sell, self.high, self.low, self.last, self.lastUSD)
         return t
 
 
@@ -42,12 +42,12 @@ class HuobiModel(Model):
         super(HuobiModel, self).__init__('Huobi_' + bitcoinName)
 
     def GetTicker(self):
-        t_data = ultility.getURLData(t_url)
+        t_data = ultility.getURLData(self.api_url)
         self.date = t_data['time']
         self.buy = t_data.get('ticker')['buy']
         self.sell = t_data.get('ticker')['sell']
         self.last = t_data.get('ticker')['last']
-        self.lastUSD = self.last/USD_RMB
+        self.lastUSD = self.last * cny_usd
         self.high = t_data.get('ticker')['high']
         self.low = t_data.get('ticker')['low']
         self.vol = t_data.get('ticker')['vol']
@@ -92,7 +92,7 @@ class OkcoinModel(Model):
         self.buy = t_data.get('ticker')['buy']
         self.sell = t_data.get('ticker')['sell']
         self.last = t_data.get('ticker')['last']
-        self.lastUSD = float(self.last)/USD_RMB
+        self.lastUSD = float(self.last) * cny_usd
         self.high = t_data.get('ticker')['high']
         self.low = t_data.get('ticker')['low']
         self.vol = t_data.get('ticker')['vol']
@@ -102,31 +102,6 @@ class OkcoinModel(Model):
             # time.sleep(waitTime)
 
 
-'''
-GET 	https://www.bitstamp.net/api/v2/ticker/{currency_pair}
-  	Supported values for currency_pair: btcusd, btceur, eurusd, xrpusd, xrpeur, xrpbtc, ltcusd, ltceur, ltcbtc, ethusd, etheur, ethbtc
-  	
-Response (JSON)
-last 	Last BTC price.
-high 	Last 24 hours price high.
-low 	Last 24 hours price low.
-vwap 	Last 24 hours volume weighted average price.
-volume 	Last 24 hours volume.
-bid 	Highest buy order.
-ask 	Lowest sell order.
-timestamp 	Unix timestamp date and time.
-open 	First price of the day.  	
-
-high	"4365.96"
-last	"4305.53"
-timestamp	"1503932683"
-bid	"4305.54"
-vwap	"4277.41"
-volume	"6567.14892154"
-low	"4169.01"
-ask	"4312.94"
-open	"4329.91"
-'''
 class BitstampModel(Model):
     api_url = ''
     def __init__(self, bitcoinName):
@@ -156,8 +131,31 @@ class BitstampModel(Model):
 #         # t_last = t_data['last']
 #         # print("%s : %s" %(targeName,t_last))
 #         time.sleep(waitTime)
+'''
+GET 	https://www.bitstamp.net/api/v2/ticker/{currency_pair}
+  	Supported values for currency_pair: btcusd, btceur, eurusd, xrpusd, xrpeur, xrpbtc, ltcusd, ltceur, ltcbtc, ethusd, etheur, ethbtc
 
+Response (JSON)
+last 	Last BTC price.
+high 	Last 24 hours price high.
+low 	Last 24 hours price low.
+vwap 	Last 24 hours volume weighted average price.
+volume 	Last 24 hours volume.
+bid 	Highest buy order.
+ask 	Lowest sell order.
+timestamp 	Unix timestamp date and time.
+open 	First price of the day.  	
 
+high	"4365.96"
+last	"4305.53"
+timestamp	"1503932683"
+bid	"4305.54"
+vwap	"4277.41"
+volume	"6567.14892154"
+low	"4169.01"
+ask	"4312.94"
+open	"4329.91"
+'''
 
 class BitfinexModel(Model):
     api_url = ''
@@ -174,7 +172,7 @@ class BitfinexModel(Model):
 
     def GetTicker(self):
         t_data = ultility.getURLData(self.api_url)
-        self.date = t_data['timestamp'].split('.')[0]
+        self.date = t_data['timestamp'] # .split('.')[0]
         self.buy = t_data.get('ask')
         self.sell = t_data.get('bid')
         self.lastUSD = float(t_data.get('last_price'))
@@ -191,6 +189,34 @@ class BitfinexModel(Model):
 #     https://api.bitfinex.com/v1/pubticker/btcusd
 #     '''
 
+class CoincheckModel(Model):
+    api_url = ''
+
+    def __init__(self, bitcoinName):
+        if bitcoinName == 'BTC':
+            self.api_url = 'https://coincheck.com/api/ticker'
+        # elif bitcoinName == 'LTC':
+        #     self.api_url = ''
+        else:
+            pass
+
+        super(CoincheckModel, self).__init__('Coincheck' + bitcoinName)
+
+    def GetTicker(self):
+        t_data = ultility.getURLData(self.api_url)
+        self.date = t_data['timestamp'] # .split('.')[0]
+        self.buy = t_data.get('ask')
+        self.sell = t_data.get('bid')
+        self.last = float(t_data.get('last'))
+        self.lastUSD = self.last * jpy_usd
+        # print('self.lastUSD : %s - %s' % (self.lastUSD, type(self.lastUSD)))
+        self.high = t_data.get('high')
+        self.low = t_data.get('low')
+        self.vol = t_data.get('volume')
+
+        # t_last = t_data['last_price']
+        # print("%s : %s" % (self.name, self.last))
+        # time.sleep(waitTime)
 
 '''
 https://coincheck.com/api/ticker
@@ -204,11 +230,6 @@ volume	21855.48989698
 timestamp	1503927864
 
 '''
-
-
-
-
-
 
 
 class BithumbModel(Model):
@@ -225,16 +246,16 @@ class BithumbModel(Model):
         super(BithumbModel, self).__init__('Bithumb' + bitcoinName)
 
     def GetTicker(self):
-        t_data = ultility.getURLData(self.api_url)
+        t_data = ultility.getURLData(self.api_url)['data']
         self.date = t_data['date']
         self.buy = t_data.get('buy_price')
         self.sell = t_data.get('sell_price')
-        self.lastUSD = self.last*
-        # print('self.lastUSD : %s - %s' % (self.lastUSD, type(self.lastUSD)))
         self.last = float(t_data.get('closing_price'))
-        self.high = t_data.get('high')
-        self.low = t_data.get('low')
-        self.vol = t_data.get('volume')
+        self.lastUSD = self.last * krw_usd
+        # print('self.lastUSD : %s - %s' % (self.lastUSD, type(self.lastUSD)))
+        self.high = t_data.get('max_price')
+        self.low = t_data.get('min_price')
+        self.vol = t_data.get('volume_1day')
 '''
 
 https://api.bithumb.com/public/ticker/{currency}更多
@@ -274,60 +295,219 @@ date	目前时间Timestamp
 '''
 
 
+class BitflyerModel(Model):
+    api_url = ''
+
+    def __init__(self, bitcoinName):
+        if bitcoinName == 'BTC':
+            self.api_url = 'https://api.bitflyer.jp/v1/ticker'
+        # elif bitcoinName == 'LTC':
+        #     self.api_url = 'https://api.bithumb.com/public/ticker/LTC'
+        else:
+            pass
+
+        super(BitflyerModel, self).__init__('Bitflyer' + bitcoinName)
+
+    def GetTicker(self):
+        t_data = ultility.getURLData(self.api_url)
+        self.date = t_data['timestamp']
+        self.buy = t_data.get('buy_price')
+        self.sell = t_data.get('sell_price')
+        self.lastUSD = self.last * jpy_usd
+        # print('self.lastUSD : %s - %s' % (self.lastUSD, type(self.lastUSD)))
+        self.last = float(t_data.get('closing_price'))
+        self.high = t_data.get('max_price')
+        self.low = t_data.get('min_price')
+        self.vol = t_data.get('volume_1day')
+
+'''
+https://api.bitflyer.jp/v1/ticker/BTC_JPY
+
+  { "product_code": "BTC_JPY" },
+  { "product_code": "FX_BTC_JPY" },
+  { "product_code": "ETH_BTC" },
+  
+Response
+
+{
+  "product_code": "BTC_JPY",
+  "timestamp": "2015-07-08T02:50:59.97",
+  "tick_id": 3579,
+  "best_bid": 30000,
+  "best_ask": 36640,
+  "best_bid_size": 0.1,
+  "best_ask_size": 5,
+  "total_bid_depth": 15.13,
+  "total_ask_depth": 20,
+  "ltp": 31690,
+  "volume": 16819.26,
+  "volume_by_product": 6819.26
+}
+
+'''
+
+
+
+
+'''
+curno: "KRW",curnm: "韩国元"
+curno: "HKD",curnm: "港币"
+curno: "EUR",curnm: "欧元"
+curno: "CNY",curnm: "人民币"
+curno: "JPY",curnm: "日元"
+
+'''
 
 waitTime = 5
-USD_RMB = ultility.getUSDexchange()
-print(USD_RMB)
+bitcoinList = []
+strBitcoinList = []
 
-BTCHuobi = HuobiBTC()
-BTCOkcoin = OkcoinBTC()
-BTCBitfinex = BitfinexBTC()
-BTCBitstamp = BitstampBTC()
+# cny_usd = ultility.GetExchange('CNY')
+# jpy_usd = ultility.GetExchange('JPY')
+# krw_usd = ultility.GetExchange('KRW')
+
+exchange2 = ultility.GetExchange2()
+cny_usd = round(1/exchange2['CNY'], 6)
+jpy_usd = round(1/exchange2['JPY'], 6)
+krw_usd = round(1/exchange2['KRW'], 6)
 
 
+print ('cny_usd : %s' % cny_usd)
+print ('jpy_usd : %s' % jpy_usd)
+print ('krw_usd : %s' % krw_usd)
+print ('-'*80)
+# print ('cny_usd : %s' % cny_usd2)
+# print ('jpy_usd : %s' % jpy_usd2)
+# print ('krw_usd : %s' % krw_usd2)
 
-def getHuobiTicker():
+BTCHuobi = HuobiModel('BTC')
+BTCOkcoin = OkcoinModel('BTC')
+BTCBitfinex = BitfinexModel('BTC')
+BTCBitstamp = BitstampModel('BTC')
+BTCCoincheck = CoincheckModel('BTC')
+BTCBithumb = BithumbModel('BTC')
+# BTCBitflyer = BitflyerModel('BTC')
+
+strBitcoinList = ['BTCHuobi', 'BTCOkcoin', 'BTCBitfinex', 'BTCBitstamp', 'BTCCoincheck', 'BTCBithumb']
+bitcoinList = [BTCHuobi, BTCOkcoin, BTCBitfinex, BTCBitstamp, BTCCoincheck, BTCBithumb]
+
+
+def getBTCHuobiTicker():
     BTCHuobi.GetTicker()
     # print BTCHuobi.Mod2Dic()
 
-def getHuobiTicker():
-    BTCHuobi.GetTicker()
+def getBTCOkcoinTicker():
+    BTCOkcoin.GetTicker()
 
-def getHuobiTicker():
-    BTCHuobi.GetTicker()
+def getBTCBitfinexTicker():
+    BTCBitfinex.GetTicker()
 
-def getHuobiTicker():
-    BTCHuobi.GetTicker()
+def getBTCBitstampTicker():
+    BTCBitstamp.GetTicker()
 
-def getHuobiTicker():
-    BTCHuobi.GetTicker()
+def getBTCCoincheckTicker():
+    BTCCoincheck.GetTicker()
+
+def getBTCBithumbTicker():
+    BTCBithumb.GetTicker()
+
+def getBTCCoincheckTicker():
+    BTCCoincheck.GetTicker()
+
+def getBTCBitflyerTicker():
+    BTCBitflyer.GetTicker()
+
+
+LTCHuobi = HuobiModel('LTC')
+LTCOkcoin = OkcoinModel('LTC')
+LTCBitfinex = BitfinexModel('LTC')
+LTCBitstamp = BitstampModel('LTC')
+LTCCoincheck = CoincheckModel('LTC')
+LTCBithumb = BithumbModel('LTC')
+
+strBitcoinList2 = ['LTCHuobi', 'LTCOkcoin', 'LTCBitfinex', 'LTCBitstamp', 'LTCBithumb']
+bitcoinList2 = [LTCHuobi, LTCOkcoin, LTCBitfinex, LTCBitstamp, LTCBithumb]
+
+def getLTCHuobiTicker():
+    LTCHuobi.GetTicker()
+    # print LTCHuobi.Mod2Dic()
+
+
+def getLTCOkcoinTicker():
+    LTCOkcoin.GetTicker()
+
+
+def getLTCBitfinexTicker():
+    LTCBitfinex.GetTicker()
+
+
+def getLTCBitstampTicker():
+    LTCBitstamp.GetTicker()
+
+
+def getLTCCoincheckTicker():
+    LTCCoincheck.GetTicker()
+
+
+def getLTCBithumbTicker():
+    LTCBithumb.GetTicker()
+
+
+def getLTCCoincheckTicker():
+    LTCCoincheck.GetTicker()
+
+
+# def getLTCBitflyerTicker():
+#     LTCBitflyer.GetTicker()
+
 
 def startMain():
-    HuobiBTCTicker = threading.Thread(target=getHuobiTicker)
-    HuobiBTCTicker.start()
+    BTCDic = {}
+    LTCDic = {}
+
+    for strBitcoin in strBitcoinList:
+        BTCTicker = threading.Thread(target=eval('get' + strBitcoin + 'Ticker'))
+        BTCTicker.start()
+
+    for strBitcoin in strBitcoinList2:
+        BTCTicker = threading.Thread(target=eval('get' + strBitcoin + 'Ticker'))
+        BTCTicker.start()
+
 
     while 1:
-        BTCHuobi.GetTicker()
-        print BTCHuobi.Mod2Dic()
+        for bitcoin in bitcoinList:
+            bitcoin.GetTicker()
+            # print bitcoin.Mod2Dic()
+            BTCDic.update(bitcoin.Mod2Dic())
+
+        frameBTC = pd.DataFrame(BTCDic).T
+        frameBTC = frameBTC.sort_values(by=['lastUSD'])
+        serierBTC = frameBTC['lastUSD']
+        # print(serierBTC)
+        serierBTC = serierBTC / serierBTC[0] - 1
+        # print (serierBTC)
+        frameBTC['Dif'] = serierBTC
+        print(frameBTC.loc[:, ['lastUSD', 'Dif']])
+        print ('-' * 80)
+
         time.sleep(waitTime)
 
-        # Huobi_BTC.GetTicker()
-        # BTCDic.update(Huobi_BTC.Mod2Dic())
-        # # BTCDic.update(Okcoin_BTC.Mod2Dic())
-        # # BTCDic.update(Bitfinex_BTC.Mod2Dic())
-        # # BTCDic.update(Bitstamp_BTC.Mod2Dic())
-        #
-        # frameBTC = pd.DataFrame(BTCDic).T
-        # frameBTC = frameBTC.sort_values(by=['lastUSD'])
-        # serierBTC = frameBTC['lastUSD']
-        # # print(serierBTC)
-        # serierBTC = serierBTC/serierBTC[0]-1
-        # # print (serierBTC)
-        # frameBTC['Dif'] = serierBTC
-        # print(frameBTC.loc[:, ['lastCNY', 'lastUSD', 'Dif']])
-        # print ('-' * 80)
+        for bitcoin in bitcoinList2:
+            bitcoin.GetTicker()
+            # print bitcoin.Mod2Dic()
+            LTCDic.update(bitcoin.Mod2Dic())
 
-        # time.sleep(waitTime)
+        frameLTC = pd.DataFrame(LTCDic).T
+        frameLTC = frameLTC.sort_values(by=['lastUSD'])
+        serierLTC = frameLTC['lastUSD']
+        # print(serierBTC)
+        serierLTC = serierLTC / serierLTC[0] - 1
+        # print (serierBTC)
+        frameLTC['Dif'] = serierLTC
+        print(frameLTC.loc[:, ['lastUSD', 'Dif']])
+        print ('*' * 80)
+
+        time.sleep(waitTime)
 
 
 
@@ -335,3 +515,5 @@ def startMain():
 
 if __name__ == "__main__":
     startMain()
+
+

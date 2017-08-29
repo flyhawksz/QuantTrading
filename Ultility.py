@@ -4,10 +4,69 @@ import urllib2
 import json
 import re
 import requests
+import json
+import urllib
+from urllib import urlencode
+
 
 class ultility:
     def __init__(self):
         pass
+
+    @staticmethod
+    def GetExchange(source, target='USD'):
+        # use k789 api data
+        exchange_rate = 0
+        url = 'http://api.k780.com'
+        params = {
+            'app': 'finance.rate',
+            'scur': source,
+            'tcur': target,
+            'appkey': '27849',
+            'sign': '7fd967ecc9c404c5d3e295804edfb2ce',
+            'format': 'json',
+        }
+        params = urlencode(params)
+
+        f = urllib.urlopen('%s?%s' % (url, params))
+        nowapi_call = f.read()
+        # print content
+        a_result = json.loads(nowapi_call)
+        if a_result:
+            if a_result['success'] != '0':
+                # print a_result['result'];
+                exchange_rate = float(a_result['result']['rate'])
+            else:
+                print a_result['msgid'] + ' ' + a_result['msg']
+        else:
+            print 'Request nowapi fail.'
+
+        return exchange_rate
+
+    @staticmethod
+    def GetExchange2():
+        # use openexchangerates api data
+        appID = '13090c130b794ccb99e1805586f96c66'
+        symbols = 'JPY,CNY,KRW'
+        turl = 'https://openexchangerates.org/api/latest.json'
+        print ('%s?app_id=%s&symbols=%s' %(turl, appID, symbols))
+        fp = urllib2.urlopen('%s?app_id=%s&symbols=%s' %(turl, appID, symbols))
+        resp = fp.read() #.decode("utf-8")
+        fp.close()
+        a_result = json.loads(resp)
+        if a_result:
+            print (a_result)
+            return a_result['rates']
+    '''
+    curno: "KRW",curnm: "韩国元"
+    curno: "HKD",curnm: "港币"
+    curno: "EUR",curnm: "欧元"
+    curno: "CNY",curnm: "人民币"
+    curno: "JPY",curnm: "日元"
+    '''
+
+
+
 
     @staticmethod
     def getUSDexchange():
