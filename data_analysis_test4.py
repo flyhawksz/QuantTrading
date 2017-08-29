@@ -24,8 +24,7 @@ class Model(object):
         return t
 
     def Mod2Str(self):
-        t = '%s, %s, %s, %s, %s, %s, %s, %s, %s' \
-            % (self.name, self.date, self.buy, self.sell, self.high, self.low, self.last, self.lastUSD)
+        t = '%s, %s, %s, %s, %s, %s, %s, %s' % (self.name, self.date, self.buy, self.sell, self.high, self.low, self.last, self.lastUSD)
         return t
 
 
@@ -36,6 +35,8 @@ class HuobiModel(Model):
             self.api_url = 'http://api.huobi.com/staticmarket/ticker_btc_json.js'
         elif bitcoinName == 'LTC':
             self.api_url ='http://api.huobi.com/staticmarket/ticker_ltc_json.js'
+        # elif bitcoinName == 'ETH':
+        #     self.api_url ='https://be.huobi.com/market/detail?symbol=ethcny'
         else:
             pass
 
@@ -81,6 +82,8 @@ class OkcoinModel(Model):
             self.api_url = 'https://www.okcoin.cn/api/v1/ticker.do?symbol=btc_cny'
         elif bitcoinName == 'LTC':
             self.api_url = 'https://www.okcoin.cn/api/v1/ticker.do?symbol=ltc_cny'
+        elif bitcoinName == 'ETH':
+            self.api_url = 'https://www.okcoin.cn/api/v1/ticker.do?symbol=eth_cny'
         else:
             pass
 
@@ -97,10 +100,6 @@ class OkcoinModel(Model):
         self.low = t_data.get('ticker')['low']
         self.vol = t_data.get('ticker')['vol']
 
-            # t_last = t_data.get('ticker')['last']
-            # print("%s CNY: %s USD %s" %(targeName,t_last,float(t_last)*100/USD_RMB))
-            # time.sleep(waitTime)
-
 
 class BitstampModel(Model):
     api_url = ''
@@ -110,6 +109,8 @@ class BitstampModel(Model):
             self.api_url = 'https://www.bitstamp.net/api/v2/ticker/btcusd'
         elif bitcoinName == 'LTC':
             self.api_url = 'https://www.bitstamp.net/api/v2/ticker/ltcusd'
+        elif bitcoinName == 'ETH':
+            self.api_url = 'https://www.bitstamp.net/api/v2/ticker/ethusd'
         else:
             pass
 
@@ -165,10 +166,12 @@ class BitfinexModel(Model):
             self.api_url = 'https://api.bitfinex.com/v1/pubticker/btcusd'
         elif bitcoinName == 'LTC':
             self.api_url = 'https://api.bitfinex.com/v1/pubticker/ltcusd'
+        elif bitcoinName == 'ETH':
+            self.api_url = 'https://api.bitfinex.com/v1/pubticker/ethusd'
         else:
             pass
 
-        super(BitfinexModel, self).__init__('Bitfinex' + bitcoinName)
+        super(BitfinexModel, self).__init__('Bitfinex_' + bitcoinName)
 
     def GetTicker(self):
         t_data = ultility.getURLData(self.api_url)
@@ -200,7 +203,7 @@ class CoincheckModel(Model):
         else:
             pass
 
-        super(CoincheckModel, self).__init__('Coincheck' + bitcoinName)
+        super(CoincheckModel, self).__init__('Coincheck_' + bitcoinName)
 
     def GetTicker(self):
         t_data = ultility.getURLData(self.api_url)
@@ -240,10 +243,12 @@ class BithumbModel(Model):
             self.api_url = 'https://api.bithumb.com/public/ticker/BTC'
         elif bitcoinName == 'LTC':
             self.api_url = 'https://api.bithumb.com/public/ticker/LTC'
+        elif bitcoinName == 'ETH':
+            self.api_url = 'https://api.bithumb.com/public/ticker/ETH'
         else:
             pass
 
-        super(BithumbModel, self).__init__('Bithumb' + bitcoinName)
+        super(BithumbModel, self).__init__('Bithumb_' + bitcoinName)
 
     def GetTicker(self):
         t_data = ultility.getURLData(self.api_url)['data']
@@ -414,15 +419,15 @@ def getBTCBithumbTicker():
 def getBTCCoincheckTicker():
     BTCCoincheck.GetTicker()
 
-def getBTCBitflyerTicker():
-    BTCBitflyer.GetTicker()
+# def getBTCBitflyerTicker():
+#     BTCBitflyer.GetTicker()
 
 
 LTCHuobi = HuobiModel('LTC')
 LTCOkcoin = OkcoinModel('LTC')
 LTCBitfinex = BitfinexModel('LTC')
 LTCBitstamp = BitstampModel('LTC')
-LTCCoincheck = CoincheckModel('LTC')
+# LTCCoincheck = CoincheckModel('LTC')
 LTCBithumb = BithumbModel('LTC')
 
 strBitcoinList2 = ['LTCHuobi', 'LTCOkcoin', 'LTCBitfinex', 'LTCBitstamp', 'LTCBithumb']
@@ -432,49 +437,74 @@ def getLTCHuobiTicker():
     LTCHuobi.GetTicker()
     # print LTCHuobi.Mod2Dic()
 
-
 def getLTCOkcoinTicker():
     LTCOkcoin.GetTicker()
-
 
 def getLTCBitfinexTicker():
     LTCBitfinex.GetTicker()
 
-
 def getLTCBitstampTicker():
     LTCBitstamp.GetTicker()
 
-
-def getLTCCoincheckTicker():
-    LTCCoincheck.GetTicker()
-
+# def getLTCCoincheckTicker():
+#     LTCCoincheck.GetTicker()
 
 def getLTCBithumbTicker():
     LTCBithumb.GetTicker()
-
-
-def getLTCCoincheckTicker():
-    LTCCoincheck.GetTicker()
-
 
 # def getLTCBitflyerTicker():
 #     LTCBitflyer.GetTicker()
 
 
+# ETHHuobi = HuobiModel('ETH')
+ETHOkcoin = OkcoinModel('ETH')
+ETHBitfinex = BitfinexModel('ETH')
+ETHBitstamp = BitstampModel('ETH')
+# ETHCoincheck = CoincheckModel('ETH')
+ETHBithumb = BithumbModel('ETH')
+
+strBitcoinList3 = ['ETHOkcoin', 'ETHBitfinex', 'ETHBitstamp', 'ETHBithumb']
+bitcoinList3 = [ETHOkcoin, ETHBitfinex, ETHBitstamp, ETHBithumb]
+
+# def getETHHuobiTicker():
+#     ETHHuobi.GetTicker()
+    # print ETHHuobi.Mod2Dic()
+
+def getETHOkcoinTicker():
+    ETHOkcoin.GetTicker()
+
+def getETHBitfinexTicker():
+    ETHBitfinex.GetTicker()
+
+def getETHBitstampTicker():
+    ETHBitstamp.GetTicker()
+
+# def getETHCoincheckTicker():
+#     ETHCoincheck.GetTicker()
+
+def getETHBithumbTicker():
+    ETHBithumb.GetTicker()
+
+
 def startMain():
     BTCDic = {}
     LTCDic = {}
+    ETHDic = {}
 
     for strBitcoin in strBitcoinList:
         BTCTicker = threading.Thread(target=eval('get' + strBitcoin + 'Ticker'))
         BTCTicker.start()
 
     for strBitcoin in strBitcoinList2:
-        BTCTicker = threading.Thread(target=eval('get' + strBitcoin + 'Ticker'))
-        BTCTicker.start()
+        LTCTicker = threading.Thread(target=eval('get' + strBitcoin + 'Ticker'))
+        LTCTicker.start()
 
+    for strBitcoin in strBitcoinList3:
+        ETHTicker = threading.Thread(target=eval('get' + strBitcoin + 'Ticker'))
+        ETHTicker.start()
 
     while 1:
+        # --------------------for BTC -------------------------
         for bitcoin in bitcoinList:
             bitcoin.GetTicker()
             # print bitcoin.Mod2Dic()
@@ -489,9 +519,9 @@ def startMain():
         frameBTC['Dif'] = serierBTC
         print(frameBTC.loc[:, ['lastUSD', 'Dif']])
         print ('-' * 80)
-
-        time.sleep(waitTime)
-
+        ultility.DataFrame2Excel(frameBTC.loc[:, ['lastUSD', 'Dif']], 'frameBTC')
+        # time.sleep(waitTime)
+        # --------------------for LTC -------------------------
         for bitcoin in bitcoinList2:
             bitcoin.GetTicker()
             # print bitcoin.Mod2Dic()
@@ -505,13 +535,25 @@ def startMain():
         # print (serierBTC)
         frameLTC['Dif'] = serierLTC
         print(frameLTC.loc[:, ['lastUSD', 'Dif']])
+        print ('-' * 80)
+        ultility.DataFrame2Excel(frameLTC.loc[:, ['lastUSD', 'Dif']], 'frameLTC')
+        # --------------------for ETH -------------------------
+        for bitcoin in bitcoinList3:
+            bitcoin.GetTicker()
+            # print bitcoin.Mod2Dic()
+            ETHDic.update(bitcoin.Mod2Dic())
+
+        frameETH = pd.DataFrame(ETHDic).T
+        frameETH = frameETH.sort_values(by=['lastUSD'])
+        serierETH = frameETH['lastUSD']
+        # print(serierBTC)
+        serierETH = serierETH / serierETH[0] - 1
+        # print (serierBTC)
+        frameETH['Dif'] = serierETH
+        print(frameETH.loc[:, ['lastUSD', 'Dif']])
         print ('*' * 80)
-
+        ultility.DataFrame2Excel(frameETH.loc[:, ['lastUSD', 'Dif']], 'frameETH')
         time.sleep(waitTime)
-
-
-
-
 
 if __name__ == "__main__":
     startMain()

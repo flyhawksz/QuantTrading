@@ -1,12 +1,12 @@
 # coding=utf-8
 
 import urllib2
-import json
 import re
 import requests
 import json
 import urllib
 from urllib import urlencode
+import pandas as pd
 
 
 class ultility:
@@ -49,13 +49,13 @@ class ultility:
         appID = '13090c130b794ccb99e1805586f96c66'
         symbols = 'JPY,CNY,KRW'
         turl = 'https://openexchangerates.org/api/latest.json'
-        print ('%s?app_id=%s&symbols=%s' %(turl, appID, symbols))
+        # print ('%s?app_id=%s&symbols=%s' %(turl, appID, symbols))
         fp = urllib2.urlopen('%s?app_id=%s&symbols=%s' %(turl, appID, symbols))
         resp = fp.read() #.decode("utf-8")
         fp.close()
         a_result = json.loads(resp)
         if a_result:
-            print (a_result)
+            # print (a_result)
             return a_result['rates']
     '''
     curno: "KRW",curnm: "韩国元"
@@ -64,9 +64,6 @@ class ultility:
     curno: "CNY",curnm: "人民币"
     curno: "JPY",curnm: "日元"
     '''
-
-
-
 
     @staticmethod
     def getUSDexchange():
@@ -116,3 +113,10 @@ class ultility:
                 ultility.list_all_dict(temp_value)  # 自我调用实现无限遍历
 
             print('*' * 40)
+
+    @staticmethod
+    def DataFrame2Excel(df, tagetSheet):
+        writer = pd.ExcelWriter('output_%s.xlsx' % tagetSheet)
+        df.to_excel(writer, tagetSheet)
+        writer.save()
+        writer.close()
