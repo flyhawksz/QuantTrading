@@ -21,7 +21,7 @@ import numpy as np
 # 'paymium', 'poloniex', 'quadrigacx', 'southxchange', 'surbitcoin', 'therock', 'upbit', 'urdubit', 'vbtc', 'virwox',
 # 'zaif', 'zb']
 
-good_exchanges = ['bequant', 'binanceje', 'bit2c', 'bitbank', 'bitbay', 'bitflyer']
+good_exchanges = ['bitbay', 'bitflyer', 'bitstamp']
 
 
 def create_exchange(exchange_name):
@@ -58,8 +58,10 @@ def create_exchange(exchange_name):
 
     currencies = exchange.currencies  # a list of currencies
     print('currencies = %s' % currencies)
-    kraken = ccxt.kraken()
-    kraken.load_markets()
+
+
+    # kraken = ccxt.kraken()
+    # kraken.load_markets()
 
     # kraken.markets['BTC/USD']  # symbol → market (get market by symbol)
     # kraken.markets_by_id['XXRPZUSD']  # id → market (get market by id)
